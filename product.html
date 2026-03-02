@@ -378,28 +378,34 @@ submitBtn.style.cursor = "not-allowed";
 
   try{
     await runTransaction(db, async t=>{
-      const prodRef = doc(db,"products",product.id);
-      const prodSnap = await t.get(prodRef);
-      if(!prodSnap.exists()) throw "Product missing";
-      const stock = Number(prodSnap.data().quantity||0);
-      if(quantity>stock) throw `الكمية غير متوفرة، المتوفر فقط: ${stock}`;
-      t.update(prodRef,{quantity:stock-quantity});
-      const orderRef = doc(collection(db,"orders"));
-      t.set(orderRef,{
-        userId:auth.currentUser?auth.currentUser.uid:null,
-        productId:product.id,
-        quantity:quantity,
-        totalPrice:product.price*quantity+shipping,
-        paymentMethod,
-        transferImage:transferUrl,
-        userName:name,
-        userPhone:phone,
-        userAddress:address,
-        province:provinceEl.value,
-        createdAt:serverTimestamp(),
-        status:"pending"
-      });
-    });
+  const prodRef = doc(db,"products",product.id);
+  const prodSnap = await t.get(prodRef);
+  if(!prodSnap.exists()) throw "Product missing";
+  const stock = Number(prodSnap.data().quantity||0);
+  if(quantity>stock) throw `الكمية غير متوفرة، المتوفر فقط: ${stock}`;
+  t.update(prodRef,{quantity:stock-quantity});
+
+  const orderRef = doc(collection(db,"orders"));
+  t.set(orderRef,{
+    userId:auth.currentUser?auth.currentUser.uid:null,
+    items:[{
+      productId: product.id,
+      name: product.name,
+      quantity: quantity,
+      price: product.price,
+      image: product.images[0] || ""
+    }],
+    totalPrice: product.price*quantity + shipping,
+    paymentMethod,
+    transferImage: transferUrl,
+    userName: name,
+    userPhone: phone,
+    userAddress: address,
+    province: provinceEl.value,
+    createdAt: serverTimestamp(),
+    status: "pending"
+  });
+});
     showToast("تم الشراء 🎉 جاري المراجعة الآن");
     submitBtn.disabled = false;
 submitBtn.innerText = "Confirm Order";
