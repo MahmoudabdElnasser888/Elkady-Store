@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>All watches</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+
+<style>
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+font-family:'Poppins',sans-serif;
+}
+
+body{
+background:linear-gradient(135deg,#b9b7b7,#002b00);
+color:white;
+min-height:100vh;
+}
+
+header{
+padding:40px 20px;
+text-align:center;
+}
+
+header h1{
+font-size:42px;
+background:linear-gradient(45deg,#6dff5a,#000000);
+-webkit-background-clip:text;
+-webkit-text-fill-color:transparent;
+}
+
+.products{
+display:grid;
+grid-template-columns:repeat(auto-fit,minmax(260px,1fr));
+gap:30px;
+padding:40px;
+max-width:1200px;
+margin:auto;
+}
+
+.card{
+background:rgba(255,255,255,0.05);
+backdrop-filter:blur(20px);
+border:1px solid rgba(255,255,255,0.1);
+border-radius:20px;
+padding:20px;
+cursor:pointer;
+position:relative;
+transition:0.4s ease;
+transform:translateY(30px);
+opacity:0;
+}
+
+.card.show{
+transform:translateY(0);
+opacity:1;
+}
+
+.card:hover{
+transform:translateY(-10px) scale(1.03);
+box-shadow:0 20px 40px rgb(16, 196, 0);
+}
+
+.card img{
+width:100%;
+border-radius:15px;
+margin-bottom:1px;
+}
+
+.card h3{
+margin-bottom:10px;
+}
+
+.price{
+margin-bottom:10px;
+}
+
+.old{
+text-decoration:line-through;
+color:#000000a4;
+margin-right:8px;
+}
+
+.new{
+color:#000000;
+font-weight:700;
+font-size:18px;
+}
+
+.status{
+padding:6px 12px;
+border-radius:20px;
+font-size:12px;
+display:inline-block;
+}
+
+.available{
+background:#2ecc71;
+color:black;
+}
+
+.sold{
+background:#e74c3c;
+}
+
+.overlay{
+position:absolute;
+top:0;
+left:0;
+width:100%;
+height:100%;
+background:rgba(0,0,0,0.7);
+display:flex;
+align-items:center;
+justify-content:center;
+font-size:22px;
+font-weight:bold;
+border-radius:20px;
+opacity:0;
+transition:0.3s;
+}
+
+.card.soldout .overlay{
+opacity:1;
+}
+
+
+.img-box{
+position:relative;
+width:100%;
+height:420px;
+overflow:hidden;
+border-radius:15px;
+}
+
+.img-box img{
+width:100%;
+display:block;
+object-fit:cover; 
+transition:0.5s ease;
+}
+
+.hover-img{
+position:absolute;
+top:0;
+left:0;
+opacity:0;
+}
+
+.card:hover .hover-img{
+opacity:1;
+}
+
+.card:hover .main-img{
+opacity:0;
+}
+
+@media(max-width:768px){
+header h1{
+font-size:30px;
+}
+}
+</style>
+</head>
+
+<body>
+
+<header>
+<h1>All Watches</h1>
+</header>
+
+<section class="products" id="products"></section>
+
+<script type="module">
+
+// ================= FIREBASE =================
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getFirestore, collection, getDocs, query, where } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+
+const firebaseConfig = {
+  apiKey: "AIzaSyDyZbGtqcZ0Pggwnk_wUAA_Sjn8XNIXtbI",
+  authDomain: "stock-side.firebaseapp.com",
+  projectId: "stock-side",
+  storageBucket: "stock-side.firebasestorage.app",
+  messagingSenderId: "650352784923",
+  appId: "1:650352784923:web:59e29f1567abb56925eabe",
+  measurementId: "G-7L6GF875ED"
+};
+
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+// ================= PRODUCTS DATA =================
+
+
+const container = document.getElementById("products");
+let productsData = [];
+
+// ===== جلب المنتجات الجديدة من Firestore =====
+async function loadProducts() {
+  let newProducts = [];
+  try {
+     const q = query(collection(db,"products"), where("type","==","watch"));
+    const snapshot = await getDocs(q);
+    snapshot.forEach(doc => {
+      const data = doc.data();
+      // لو المنتج مش موجود بالفعل في productsData
+      if(!productsData.find(p => p.id === doc.id)){
+        newProducts.push({
+          id: doc.id,
+          name: data.name,
+          oldPrice: data.oldPrice,
+          newPrice: data.newPrice,
+          image: data.image1,
+          hoverImage: data.image2,
+          link: data.link,
+          quantity: data.quantity || 0
+        });
+      } else {
+        // لو موجود، حدث quantity فقط
+        const existing = productsData.find(p => p.id === doc.id);
+        existing.quantity = data.quantity || 0;
+      }
+    });
+  } catch(err){ console.error(err); }
+
+  // دمج المنتجات الجديدة مع المنتجات الحالية
+  const allProducts = [...productsData, ...newProducts];
+
+  renderProducts(allProducts);
+
+  // تحديث productsData بالقائمة الجديدة
+  productsData = allProducts;
+
+}
+
+// ===== ريندر المنتجات =====
+function renderProducts(products){
+  container.innerHTML = "";
+  products.forEach((product,index)=>{
+    const card = document.createElement("div");
+    card.classList.add("card");
+    if(product.quantity === 0) card.classList.add("soldout");
+
+    card.innerHTML = `
+      <div class="img-box">
+        <img src="${product.image}" class="main-img">
+        <img src="${product.hoverImage}" class="hover-img">
+      </div>
+      <h3>${product.name}</h3>
+      <div class="price">
+        <span class="old">${product.oldPrice} EGP</span>
+        <span class="new">${product.newPrice} EGP</span>
+      </div>
+      <span class="status ${product.quantity>0?"available":"sold"}">
+        ${product.quantity>0?"Available":"Sold Out"}
+      </span>
+      <div class="overlay">SOLD OUT</div>
+    `;
+
+    card.addEventListener("click",()=>{
+  if(product.quantity>0){
+    window.location.href = `product.html?id=${product.id}`;
+  }
+      else {
+        card.style.animation="shake 0.4s";
+        setTimeout(()=>{card.style.animation="";},400);
+      }
+    });
+
+    container.appendChild(card);
+    setTimeout(()=>{card.classList.add("show");},index*150);
+  });
+}
+
+// Shake animation
+const style = document.createElement('style');
+style.innerHTML = `
+@keyframes shake {
+0%{transform:translateX(0);}
+25%{transform:translateX(-5px);}
+50%{transform:translateX(5px);}
+75%{transform:translateX(-5px);}
+100%{transform:translateX(0);}
+}`;
+document.head.appendChild(style);
+
+// Load products
+loadProducts();
+
+</script>
+
+</body>
+</html>

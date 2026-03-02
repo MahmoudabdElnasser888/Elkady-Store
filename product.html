@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Product Detail</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Poppins',sans-serif;}
+body{background: linear-gradient(135deg,#0f0f0f,#102b00);color:white;min-height:100vh;display:flex;justify-content:center;align-items:flex-start;padding:20px;}
+.product{max-width:1100px;width:100%;display:grid;grid-template-columns:1fr 1fr;gap:50px;background:rgba(255,255,255,0.05);backdrop-filter:blur(25px);border-radius:30px;padding:40px;border:1px solid rgba(255,255,255,0.1);animation:fadeIn 0.8s ease forwards;opacity:0;transform:translateY(30px);}
+@keyframes fadeIn{to{opacity:1; transform:translateY(0);}}
+.main-image{width:100%;border-radius:25px;overflow:hidden;position:relative;}
+.main-image img{width:100%;border-radius:25px;transition:0.4s ease;}
+.thumbs{display:flex;gap:15px;margin-top:20px;}
+.thumbs img{width:75px;height:75px;object-fit:cover;border-radius:15px;cursor:pointer;opacity:0.6;border:2px solid transparent;transition:0.3s;}
+.thumbs img.active,.thumbs img:hover{opacity:1;border:2px solid #46c712;transform:scale(1.08);}
+.product-info h2{font-size:30px;margin-bottom:15px;}
+.price{margin-bottom:20px;}
+.old{text-decoration:line-through;color:#777;margin-right:10px;}
+.new{font-size:24px;font-weight:700;color:#46c712;}
+.description{color:#ccc;line-height:1.6;margin-bottom:20px;}
+.quantity-container{display:flex;align-items:center;gap:10px;margin-bottom:20px;}
+.quantity-container button{background:transparent;color:#46c712;font-size:20px;border:2px solid #46c712;padding:5px 12px;border-radius:8px;cursor:pointer;transition:0.3s;}
+.quantity-container span{min-width:25px;text-align:center;display:inline-block;font-size:18px;}
+.add-cart, .buy-now, .view-cart{padding:14px 25px;border:none;border-radius:30px;background:linear-gradient(45deg,#0f0f0f,#00ff0d);color:white;font-weight:600;cursor:pointer;transition:0.3s;font-size:15px;margin-right:10px;}
+.add-cart:hover, .buy-now:hover, .view-cart:hover{transform:translateY(-3px);box-shadow:0 10px 25px rgba(81, 255, 38, 0.5);}
+.toast{position:fixed;bottom:30px;right:30px;background:rgba(20,20,20,0.95);backdrop-filter:blur(20px);padding:20px 25px;border-radius:20px;border:1px solid rgba(38, 255, 56, 0.4);box-shadow:0 10px 30px rgba(0,0,0,0.5);transform:translateY(100px);opacity:0;transition:0.5s;}
+.toast.show{transform:translateY(0);opacity:1;}
+.toast a{color:#11bb11;text-decoration:none;font-weight:600;display:inline-block;margin-top:8px;}
+.modal{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0, 0, 0, 0.85);display:flex;justify-content:center;align-items:center;opacity:0;pointer-events:none;transition:0.3s;z-index:999;}
+.modal.show{opacity:1;pointer-events:auto;}
+.modal-content{ background: linear-gradient(135deg, #050505, #0b2e00);padding:30px;border-radius:20px;max-width:500px;width:90%;position:relative;animation:modalFade 0.5s ease forwards;opacity:0;max-height:90vh;overflow-y:auto;}
+@keyframes modalFade{to{opacity:1;}}
+.modal-content h3{color:#46c712;margin-bottom:15px;}
+.modal-content label{display:block;margin-top:10px;font-size:14px;color:#ccc;}
+.modal-content input, .modal-content select{width:100%;padding:10px;margin-top:5px;border-radius:10px;border:none;outline:none;}
+.modal-content button[type="submit"]{margin-top:20px;width:100%;padding:14px;font-size:16px;border-radius:30px;background:linear-gradient(45deg,#0f0f0f,#00ff2a);color:white;font-weight:600;cursor:pointer;}
+.close-modal{position:absolute;top:15px;right:20px;cursor:pointer;color:#46c712;font-weight:bold;font-size:20px;}
+.total-summary{margin-top:15px;font-size:16px;color:#ccc;}
+.total-summary span{font-weight:600;color:#46c712;}
+.stock-bar-container {
+  width: 100%;
+  height: 12px;
+  background: rgba(255,255,255,0.1);
+  border-radius: 10px;
+  margin-bottom: 10px;
+  overflow: hidden;
+}
+
+.stock-bar {
+  height: 100%;
+  width: 0%;
+  background: green;
+  border-radius: 10px;
+  transition: width 0.5s ease, background 0.5s ease;
+}
+
+
+
+.call-btn{
+  display:block;
+  margin-top:10px;
+  text-align:center;
+  padding:12px;
+  border-radius:25px;
+  background:linear-gradient(45deg,#0f0f0f,#f8f8f8);
+  color:white;
+  font-weight:600;
+  text-decoration:none;
+  transition:0.3s;
+}
+
+.call-btn:hover{
+  transform:translateY(-2px);
+  box-shadow:0 8px 20px rgba(0,255,50,0.4);
+}
+@media(max-width:900px){.product{grid-template-columns:1fr;gap:30px;padding:25px;}.thumbs{justify-content:center;}}
+</style>
+</head>
+<body>
+
+<div class="product">
+  <!-- LEFT -->
+  <div>
+    <div class="main-image">
+      <img id="mainImg" src="">
+    </div>
+    <div class="thumbs" id="thumbs"></div>
+  </div>
+
+  <!-- RIGHT -->
+  <div class="product-info">
+    <h2 id="prodName">Loading...</h2>
+    <div class="price">
+      <span class="old" id="oldPrice">0 EGP</span>
+      <span class="new" id="newPrice">0 EGP</span>
+    </div>
+     <div class="stock-bar-container">
+  <div class="stock-bar" id="stockBar"></div>
+</div>
+<p id="stockText" style="margin-top:5px;font-size:14px;color:#ccc;">Stock: 0</p>
+    <p class="description" id="prodDesc"></p>
+
+    <div class="quantity-container">
+      <button id="minusQty">−</button>
+      <span id="qty">1</span>
+      <button id="plusQty">+</button>
+    </div>
+
+    <button class="add-cart" id="addCartBtn">Add To Cart</button>
+    <button class="buy-now" id="buyNowBtn">Buy It Now</button>
+    <button class="view-cart" id="viewCartBtn">View Cart</button>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast">
+  <span id="toastMsg">Product added successfully 💜</span><br>
+  <a href="cart.html">Go to Cart →</a>
+</div>
+
+<!-- BUY NOW MODAL -->
+<div class="modal" id="buyModal">
+  <div class="modal-content">
+
+
+    <a href="https://wa.me/2001153919147" target="_blank" class="call-btn">
+  💬 WhatsApp
+</a>
+
+
+    <span class="close-modal" id="closeModal">&times;</span>
+    <h3>Checkout</h3>
+    <form id="checkoutForm">
+      <label>Name</label>
+      <input type="text" id="userName" required>
+      <label>Phone</label>
+      <input type="text" id="userPhone" required>
+      <label>Address</label>
+      <input type="text" id="userAddress" required>
+      <label>Province & Shipping</label>
+      <select id="province">
+        <option value="cairo" data-shipping="80">Cairo</option>
+        <option value="giza" data-shipping="50">Giza</option>
+      </select>
+      <label>Payment Method</label>
+      <select id="paymentMethod">
+        <option value="cod">Cash on Delivery</option>
+        <option value="transfer">Transfer</option>
+      </select>
+      <p id="paymentInstructions" style="color:#ffffff;margin-top:5px;"></p>
+      <label id="transferLabel" style="display:none;">Upload Transfer Image</label>
+      <input type="file" id="transferImg" style="display:none;" required>
+      <label><input type="checkbox" id="terms"> I agree to <a href="terms.html" target="_blank" style="color:#ffffff;">terms & conditions</a></label>
+      <p class="total-summary">
+        Base Price: <span id="modalBase">0</span> EGP <br>
+        Shipping: <span id="modalShipping">0</span> EGP <br>
+        Quantity: <span id="modalQty">1</span> <br>
+        Total: <span id="modalTotal">0</span> EGP
+      </p>
+      <button type="submit">Confirm Order</button>
+    </form>
+  </div>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getFirestore, doc, getDoc, runTransaction, collection, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { getAuth } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+
+// ====== FIREBASE ======
+const firebaseConfig = {
+  apiKey: "AIzaSyDyZbGtqcZ0Pggwnk_wUAA_Sjn8XNIXtbI",
+  authDomain: "stock-side.firebaseapp.com",
+  projectId: "stock-side",
+  storageBucket: "stock-side.firebasestorage.app",
+  messagingSenderId: "650352784923",
+  appId: "1:650352784923:web:59e29f1567abb56925eabe",
+  measurementId: "G-7L6GF875ED"
+};
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const auth = getAuth(app);
+
+// ====== URL PARAM ======
+const urlParams = new URLSearchParams(window.location.search);
+const prodId = urlParams.get("id");
+
+// ====== ELEMENTS ======
+const mainImg = document.getElementById("mainImg");
+const thumbsContainer = document.getElementById("thumbs");
+const prodName = document.getElementById("prodName");
+const prodDesc = document.getElementById("prodDesc");
+const oldPriceEl = document.getElementById("oldPrice");
+const newPriceEl = document.getElementById("newPrice");
+const qtySpan = document.getElementById("qty");
+const provinceEl = document.getElementById("province");
+const totalBase = document.getElementById("modalBase");
+const totalShipping = document.getElementById("modalShipping");
+const totalQty = document.getElementById("modalQty");
+const totalTotal = document.getElementById("modalTotal");
+const toast = document.getElementById("toast");
+
+// ====== STATE ======
+let product = null;
+let quantity = 1;
+
+// ====== LOAD PRODUCT ======
+async function loadProduct(){
+  if(!prodId){
+    prodName.innerText = "Product not found";
+    return;
+  }
+  try{
+    const docRef = doc(db,"products",prodId);
+    const docSnap = await getDoc(docRef);
+    if(!docSnap.exists()){
+      prodName.innerText = "Product not found";
+      return;
+    }
+    const data = docSnap.data();
+    product = {
+      id: prodId,
+      name: data.name,
+      description: data.description || "",
+      price: Number(data.newPrice || 0),
+      oldPrice: Number(data.oldPrice || data.price || 0),
+      images: [data.image1,data.image2,data.image3].filter(Boolean),
+      quantity: Number(data.quantity || 0)
+    };
+
+    // ====== RENDER ======
+    prodName.innerText = product.name;
+    prodDesc.innerText = product.description;
+    oldPriceEl.innerText = product.oldPrice + " EGP";
+    newPriceEl.innerText = product.price + " EGP";
+
+    updateStockBar();
+
+    if(product.images.length>0){
+      mainImg.src = product.images[0];
+      thumbsContainer.innerHTML = "";
+      product.images.forEach((img,i)=>{
+        const thumb = document.createElement("img");
+        thumb.src = img;
+        if(i===0) thumb.classList.add("active");
+        thumb.addEventListener("click",()=>{
+          document.querySelectorAll(".thumbs img").forEach(t=>t.classList.remove("active"));
+          thumb.classList.add("active");
+          mainImg.style.opacity="0";
+          setTimeout(()=>{mainImg.src=img; mainImg.style.opacity="1";},200);
+        });
+        thumbsContainer.appendChild(thumb);
+      });
+    }
+
+    updateModalTotal();
+  }catch(err){console.error(err);}
+}
+
+// ====== QUANTITY & TOTAL ======
+function updateModalTotal(){
+  const shipping = parseInt(provinceEl.selectedOptions[0].dataset.shipping)||0;
+  if(product){
+    totalBase.innerText = product.price;
+    totalShipping.innerText = shipping;
+    totalQty.innerText = quantity;
+    totalTotal.innerText = (product.price*quantity + shipping);
+  }
+}
+provinceEl.addEventListener("change",updateModalTotal);
+document.getElementById("plusQty").onclick = ()=>{
+  quantity++; qtySpan.innerText = quantity; updateModalTotal();
+}
+document.getElementById("minusQty").onclick = ()=>{
+  if(quantity>1){quantity--; qtySpan.innerText = quantity; updateModalTotal();}
+}
+
+// ====== TOAST ======
+function showToast(msg){
+  document.getElementById("toastMsg").innerText = msg;
+  toast.classList.add("show");
+  setTimeout(()=>{toast.classList.remove("show");},3000);
+}
+
+// ====== CART ======
+// عند الضغط على Add to Cart
+document.getElementById("addCartBtn").onclick = ()=>{
+  let cart = JSON.parse(localStorage.getItem("cart")) || [];
+
+  // خزن الصورة الرئيسية في السلة
+  const productForCart = {
+    id: product.id,
+    name: product.name,
+    price: product.price,
+    qty: quantity,
+    image: product.images[0]   // تأكد إن هذا هو رابط الصورة
+  };
+
+  // تحقق إذا المنتج موجود بالفعل في السلة
+  const existing = cart.find(i=>i.id === product.id);
+  if(existing){
+    existing.qty += quantity;
+  } else {
+    cart.push(productForCart);
+  }
+
+  localStorage.setItem("cart", JSON.stringify(cart));
+  showToast("Product added successfully 💜");
+  updateModalTotal();
+};
+
+
+document.getElementById("viewCartBtn").onclick = ()=>{window.location.href="cart.html";}
+
+// ====== BUY NOW MODAL ======
+const buyBtn = document.getElementById("buyNowBtn");
+const modal = document.getElementById("buyModal");
+const closeModal = document.getElementById("closeModal");
+const form = document.getElementById("checkoutForm");
+const submitBtn = form.querySelector('button[type="submit"]');
+buyBtn.onclick = ()=>{modal.classList.add("show"); updateModalTotal();}
+closeModal.onclick = ()=>{modal.classList.remove("show");}
+
+// ====== CHECKOUT ======
+form.onsubmit = async (e)=>{
+  submitBtn.disabled = true;
+submitBtn.innerText = "Processing...";
+submitBtn.style.opacity = "0.6";
+submitBtn.style.cursor = "not-allowed";
+  e.preventDefault();
+  if(!product) return;
+  const name=document.getElementById("userName").value.trim();
+  const phone=document.getElementById("userPhone").value.trim();
+  const address=document.getElementById("userAddress").value.trim();
+  const paymentMethod=document.getElementById("paymentMethod").value;
+  const terms=document.getElementById("terms").checked;
+  const shipping=parseInt(provinceEl.selectedOptions[0].dataset.shipping)||0;
+
+  if(!name||!phone||!address){alert("Please fill all fields"); return;}
+  if(!terms){alert("Agree to terms"); return;}
+
+  const transferFile = document.getElementById("transferImg").files[0];
+  let transferUrl = "";
+
+  if(transferFile){
+    const formData = new FormData();
+    formData.append("image", transferFile);
+    try{
+      const res = await fetch("https://api.imgbb.com/1/upload?key=c976859feec5571cab43ec2bffbf015d",{method:"POST",body:formData});
+      const data = await res.json();
+      if(data.success) transferUrl = data.data.url;
+      else{alert("حدث خطأ أثناء رفع الصورة"); return;}
+    }catch(err){alert("خطأ في الاتصال: "+err); return;}
+  }
+
+  if(paymentMethod==="transfer" && !transferFile){alert("مطلوب رفع صورة الحوالة"); return;}
+
+  try{
+    await runTransaction(db, async t=>{
+      const prodRef = doc(db,"products",product.id);
+      const prodSnap = await t.get(prodRef);
+      if(!prodSnap.exists()) throw "Product missing";
+      const stock = Number(prodSnap.data().quantity||0);
+      if(quantity>stock) throw `الكمية غير متوفرة، المتوفر فقط: ${stock}`;
+      t.update(prodRef,{quantity:stock-quantity});
+      const orderRef = doc(collection(db,"orders"));
+      t.set(orderRef,{
+        userId:auth.currentUser?auth.currentUser.uid:null,
+        productId:product.id,
+        quantity:quantity,
+        totalPrice:product.price*quantity+shipping,
+        paymentMethod,
+        transferImage:transferUrl,
+        userName:name,
+        userPhone:phone,
+        userAddress:address,
+        province:provinceEl.value,
+        createdAt:serverTimestamp(),
+        status:"pending"
+      });
+    });
+    showToast("تم الشراء 🎉 جاري المراجعة الآن");
+    submitBtn.disabled = false;
+submitBtn.innerText = "Confirm Order";
+submitBtn.style.opacity = "1";
+submitBtn.style.cursor = "pointer";
+    modal.classList.remove("show");
+    quantity=1; qtySpan.innerText=quantity; updateModalTotal();
+  }catch(err){alert("Error: "+err);}
+}
+
+// ====== PAYMENT SWITCH ======
+const paymentMethodEl = document.getElementById("paymentMethod");
+const paymentInstructions = document.getElementById("paymentInstructions");
+const transferLabel = document.getElementById("transferLabel");
+const transferImg = document.getElementById("transferImg");
+function updatePaymentInstructions(){
+  const method = paymentMethodEl.value;
+  if(method==="cod"){
+    paymentInstructions.innerText="لإتمام الدفع عند الاستلام، يرجى تحويل مبلغ الشحن على رقم فودافون كاش: 01021006065";
+    transferLabel.style.display="block";
+    transferImg.style.display="block";
+    transferImg.required = true;
+  }else{
+    paymentInstructions.innerText="لإتمام الدفع، يرجى تحويل كامل مبلغ الأوردر على فودافون كاش على الرقم: 01021006065";
+    transferLabel.style.display="block";
+    transferImg.style.display="block";
+    transferImg.required = true;
+  }
+}
+paymentMethodEl.addEventListener("change",updatePaymentInstructions);
+updatePaymentInstructions();
+
+
+
+
+
+
+const stockBar = document.getElementById("stockBar");
+const stockText = document.getElementById("stockText");
+
+function updateStockBar(){
+  // هنا نستخدم quantity من Firebase (المخزن في product.quantity)
+  const qty = product.quantity; // الكمية المتوفرة في المخزن
+  const maxQty = 30; // أقصى كمية افتراضية للعرض
+  const percent = Math.min((qty/maxQty)*100, 100);
+
+  stockBar.style.width = percent + "%";
+
+  if(qty>50) stockBar.style.background = "green";
+  else if(qty>20) stockBar.style.background = "yellow";
+  else stockBar.style.background = "red";
+
+  stockText.innerText = "Stock: " + qty;
+}
+
+
+// ====== INIT ======
+loadProduct();
+</script>
+
+</body>
+</html>
