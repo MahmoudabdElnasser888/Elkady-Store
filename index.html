@@ -496,6 +496,14 @@ box-shadow:0 0 30px #15ff00;
 }
 
 
+/* لجعل أكثر من كارت يظهر على الموبايل */
+@media(max-width:768px){
+  .product-card{
+    min-width: 65%; /* أو 70% حسب ما تحب حجم الكارت */
+  }
+}
+
+
 
 /* ================= LUXURY CATEGORIES ================= */
 
@@ -1164,6 +1172,20 @@ header{height:70px}
 .header-center img{height:55px}
 }
 
+
+@media(max-width:768px){
+
+  .hero{
+    height: 85vh; /* نقلل الارتفاع شوية */
+  }
+
+  .hero-image img{
+    object-fit: cover;
+    object-position: center top; 
+  }
+
+}
+
 </style>
 </head>
 
@@ -1215,8 +1237,15 @@ header{height:70px}
 <section class="hero">
 
   <div class="hero-image">
+  <picture>
+    <!-- صورة الموبايل -->
+    <source srcset="mobimg.png" media="(max-width: 768px)">
+    
+    <!-- صورة الكمبيوتر (الافتراضية) -->
     <img src="ChatGPT Image Mar 2, 2026, 08_12_29 PM.png" alt="Hero">
-  </div>
+  </picture>
+</div>
+
 
   <div class="hero-overlay"></div>
 
